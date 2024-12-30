@@ -1,0 +1,89 @@
+import pytest
+from selenium import webdriver
+driver = webdriver. Chrome()
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+import os
+import pandas as pd
+driver. close()
+
+#Functions
+def read_vehicle_registrations(file_path):
+    with open(file_path, 'r') as file:
+    return [line.strip() for line in file.readlines()]
+
+def read_expected_output(file_path):
+    return pd.read_csv(file_path, delimiter=";", index_col=0)
+
+def start_browser():
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless") 
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    return driver
+
+def search_car_valuation(driver, reg_number):
+    driver.get("https://motorway.co.uk/")
+    time.sleep(5) 
+
+# input field and search for the car registration
+    input_field = driver.find_element(By.ID, "vehicle-reg-input")
+    input_field.send_keys(reg_number)
+    input_field.send_keys(Keys.RETURN)
+    time.sleep(10) 
+
+# Extract car details
+
+try:
+    details = driver.find_element(By.CLASS_NAME, "vehicle-details").text
+    except Exception as e:
+    details = str(e)
+    
+    return details
+
+    def compare_details(extracted_details, expected_details):
+    turn extracted_details.strip() == expected_details.strip()
+
+    def run_test_case(driver, reg_number, expected_details):
+    extracted_details = search_car_valuation(driver, reg_number)
+    result = compare_details(extracted_details, expected_details)
+    return result, extracted_details
+
+    @pytest.mark.parametrize("reg_number, expected_details", [
+    ("AD58 VNF", "Expected car details for AD58 VNF"),
+    ("KT17DLX", "Expected car details for KT17DLX"),])
+                                                    
+    def test_car_valuation(reg_number, expected_details):
+    driver = start_browser()
+    try:
+    result, extracted_details = run_test_case(driver, reg_number, expected_details)
+    assert result, f"Test failed for {reg_number}. Expected: {expected_details}, Got: {extracted_details}"
+    finally:
+    driver.quit()
+
+    if __name__ == "__main__":
+    input_file = os.path.join(os.path.dirname(__file__), "../input/car_input.txt")
+    output_file = os.path.join(os.path.dirname(__file__), "../output/car_output.txt")
+
+    registrations = read_vehicle_registrations(input_file)
+    expected_output = read_expected_output(output_file)
+
+    driver = start_browser()
+    
+    for reg_number in registrations:
+    if reg_number in expected_output.index:
+    expected_details = expected_output.loc[reg_number, 'Details']
+    result, extracted_details = run_test_case(driver, reg_number, expected_details)
+    if not result:
+    print(f"Test failed for {reg_number}: Expected: {expected_details}, Got: {extracted_details}")
+    else:
+    print(f"Test passed for {reg_number}")
+    else:
+    print(f"No expected details found for {reg_number}")
+    
+    driver.quit()
+
+
+
+
